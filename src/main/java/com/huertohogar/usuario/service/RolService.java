@@ -1,0 +1,38 @@
+package com.huertohogar.usuario.service;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.huertohogar.usuario.model.Rol;
+import com.huertohogar.usuario.repository.RolRepository;
+
+import jakarta.transaction.Transactional;
+
+@Service
+@Transactional
+public class RolService {
+    @Autowired
+    private RolRepository rolRepository;
+
+    // listar roles
+    public List<Rol> listarRoles(){
+        return rolRepository.findAll();
+    }
+
+    // buscar por id
+    public Rol buscarIdRol(Integer id){
+        return rolRepository.findById(id).orElse(null);
+    }
+
+    // agregar un rol
+    public Rol agregaRol(Rol rol){
+        return rolRepository.save(rol);
+    }
+
+    // eliminar rol
+    public void eliminarRol(Integer id){
+        rolRepository.deleteById(id);
+    }
+}
