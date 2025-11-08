@@ -1,6 +1,7 @@
 package com.huertohogar.usuario.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,8 +24,8 @@ public class UsuarioService {
     }
 
     // buscar por id
-    public Usuario findByIdUsuario(Integer id){
-        return usuarioRepository.findById(id).orElse(null);
+    public Optional<Usuario> findByIdUsuario(Integer id){
+        return usuarioRepository.findById(id);
     }
 
     // agregar usuario

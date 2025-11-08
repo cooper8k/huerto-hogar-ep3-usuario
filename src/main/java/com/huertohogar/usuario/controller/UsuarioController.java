@@ -1,6 +1,7 @@
 package com.huertohogar.usuario.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,7 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v1/usuario")
-@Tag(name = "usuarios",description = "controlador para gestionar los Usuarios")
+@Tag(name = "usuarios", description = "controlador para gestionar los Usuarios")
 public class UsuarioController {
     Usuario usuario = new Usuario();
 
@@ -38,19 +39,14 @@ public class UsuarioController {
     @Autowired
     private RolService rolService;
 
-
     // listar usuarios
     @GetMapping("/listar")
     @Operation(summary = "Lista de usuarios", description = "Obtiene una lista de todos los Usuarios en la base de datos")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200",
-        description = "Lista todos los usuarios correctamente",
-        content = @Content(mediaType = "application/json",
-        array = @ArraySchema( schema = @Schema(implementation = Usuario.class)))),
-        @ApiResponse(responseCode = "204",
-        description = "no se econtraron usuarios")
+            @ApiResponse(responseCode = "200", description = "Lista todos los usuarios correctamente", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Usuario.class)))),
+            @ApiResponse(responseCode = "204", description = "no se econtraron usuarios")
     })
-    public ResponseEntity <List<Usuario>> listar(){
+    public ResponseEntity<List<Usuario>> listar() {
         List<Usuario> usuarios = usuarioService.findAll();
         return ResponseEntity.ok(usuarios);
     }
@@ -59,75 +55,70 @@ public class UsuarioController {
     @PostMapping("/guardar")
     @Operation(summary = "Guarda un usuario nuevo", description = "Crea un nuevo usuario")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201",description = "crea un usuario correctamente",content = @Content(mediaType = "application/jason",array = @ArraySchema(schema = @Schema(implementation = Usuario.class)))),
-        @ApiResponse(responseCode = "400",description = "Solicitud incorrecta"),
-        @ApiResponse(responseCode = "500",description = "Error interno del servidor")
-    }
-    )
-    public ResponseEntity<Usuario> guardarUsuario(@RequestBody Usuario usuario){
+            @ApiResponse(responseCode = "201", description = "crea un usuario correctamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Usuario.class))),
+            @ApiResponse(responseCode = "400", description = "Solicitud incorrecta"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    public ResponseEntity<Usuario> guardarUsuario(@RequestBody Usuario usuario) {
         Usuario nuevUsuario = usuarioService.saveUsuario(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevUsuario);
     }
 
-
     // eliminar un usario por su id
     @DeleteMapping("/{id}/eliminar")
     @Operation(summary = "Eliminar un Usuario por su ID", description = "Elimina un Usuario a travez de su ID")
-    @ApiResponses (value = {
-        @ApiResponse(responseCode = "204",description = "Usuario eliminado correctamente"),
-        @ApiResponse(responseCode = "404",description = "Usuario no encontrado"),
-        @ApiResponse(responseCode = "500",description = "Error interno del servidor")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Usuario eliminado correctamente"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
-    public ResponseEntity<?> eliminar(@PathVariable Integer id){
-        try{
+    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
+        try {
             usuarioService.eliminarUsuario(id);
             return ResponseEntity.noContent().build();
 
-        }catch(Exception e){
+        } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-
-    //actualizar un usuario por su id
+    // actualizar un usuario por su id
     @PutMapping("/{id}/actualizar")
-    @Operation(summary = "Actualizar Un Usuario",description = "Actualiza los datos de un usuario a travez de su ID")
+    @Operation(summary = "Actualizar Un Usuario", description = "Actualiza los datos de un usuario a travez de su ID")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200",description = "Usuario actualizado correctamente",content = @Content(mediaType = "appplication/json",array = @ArraySchema(schema = @Schema(implementation = Usuario.class)))),
-        @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
-        @ApiResponse(responseCode = "400",description = "Solicitud incorrecta"),
-        @ApiResponse(responseCode = "500",description = "Error interno del servidor")
+            @ApiResponse(responseCode = "200", description = "Usuario actualizado correctamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Usuario.class))),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+            @ApiResponse(responseCode = "400", description = "Solicitud incorrecta"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
-    public ResponseEntity<Usuario> actualizar(@PathVariable Integer id,@RequestBody Usuario usuario){
-        
+    public ResponseEntity<Usuario> actualizar(@PathVariable Integer id, @RequestBody Usuario usuario) {
 
-            Usuario usuario2 = usuarioService.findByIdUsuario(id);
-            if (usuario2==null) {
+        Optional<Usuario> usuarioOpt = usuarioService.findByIdUsuario(id);
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        Usuario usuario2 = usuarioOpt.get();
+        usuario2.setNombre(usuario.getNombre());
+        usuario2.setApellido(usuario.getApellido());
+        usuario2.setCorreo(usuario.getCorreo());
+        usuario2.setContrasena(usuario.getContrasena());
+        usuario2.setEstado(usuario.isEstado());
+        // si el usuario envia el rol a actualizar va a validar si existe
+        if (usuario.getRol() != null) {
+            Integer rolid = usuario.getRol().getId_rol();
+            if (rolid == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            Rol rolGestionado = rolService.buscarIdRol(rolid);
+            if (rolGestionado == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-                
             }
-            usuario2.setNombre(usuario.getNombre());
-            usuario2.setApellido(usuario.getApellido());
-            usuario2.setCorreo(usuario.getCorreo());
-            usuario2.setContrasena(usuario.getContrasena());
-            usuario2.setEstado(usuario.isEstado());
-            // si el usuario envia el rol a actualizar va a validar si existe
-            if (usuario.getRol()!=null) {
-                Integer rolid = usuario.getRol().getId_rol();
-                if (rolid ==null) {
-                    return ResponseEntity.badRequest().build();
-                }
-                Rol rolGestionado = rolService.buscarIdRol(rolid);
-                if (rolGestionado == null) {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-                }
-                usuario2.setRol(rolGestionado);
-            }
+            usuario2.setRol(rolGestionado);
+        }
 
-            usuarioService.actualizUsuario(usuario2);
-            return ResponseEntity.ok(usuario2); 
-        
+        usuarioService.actualizUsuario(usuario2);
+        return ResponseEntity.ok(usuario2);
+
     }
-    
-    
+
 }

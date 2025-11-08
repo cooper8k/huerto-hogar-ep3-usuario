@@ -2,7 +2,6 @@ package com.huertohogar.usuario.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.huertohogar.usuario.model.Rol;
@@ -13,8 +12,11 @@ import jakarta.transaction.Transactional;
 @Service
 @Transactional
 public class RolService {
-    @Autowired
-    private RolRepository rolRepository;
+    private final RolRepository rolRepository;
+
+    public RolService(RolRepository rolRepository) {
+        this.rolRepository = rolRepository;
+    }
 
     // listar roles
     public List<Rol> listarRoles(){
