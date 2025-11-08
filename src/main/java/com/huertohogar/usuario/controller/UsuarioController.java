@@ -19,8 +19,17 @@ import com.huertohogar.usuario.model.Usuario;
 import com.huertohogar.usuario.service.RolService;
 import com.huertohogar.usuario.service.UsuarioService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/v1/usuario")
+@Tag(name = "usuarios",description = "controlador para gestionar los Usuarios")
 public class UsuarioController {
     Usuario usuario = new Usuario();
 
@@ -29,19 +38,46 @@ public class UsuarioController {
     @Autowired
     private RolService rolService;
 
+
+    // listar usuarios
     @GetMapping("/listar")
+    @Operation(summary = "Lista de usuarios", description = "Obtiene una lista de todos los Usuarios en la base de datos")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200",
+        description = "Lista todos los usuarios correctamente",
+        content = @Content(mediaType = "application/json",
+        array = @ArraySchema( schema = @Schema(implementation = Usuario.class)))),
+        @ApiResponse(responseCode = "204",
+        description = "no se econtraron usuarios")
+    })
     public ResponseEntity <List<Usuario>> listar(){
         List<Usuario> usuarios = usuarioService.findAll();
         return ResponseEntity.ok(usuarios);
     }
 
+    // crear un nuevo usuario
     @PostMapping("/guardar")
+    @Operation(summary = "Guarda un usuario nuevo", description = "Crea un nuevo usuario")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201",description = "crea un usuario correctamente",content = @Content(mediaType = "application/jason",array = @ArraySchema(schema = @Schema(implementation = Usuario.class)))),
+        @ApiResponse(responseCode = "400",description = "Solicitud incorrecta"),
+        @ApiResponse(responseCode = "500",description = "Error interno del servidor")
+    }
+    )
     public ResponseEntity<Usuario> guardarUsuario(@RequestBody Usuario usuario){
         Usuario nuevUsuario = usuarioService.saveUsuario(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevUsuario);
     }
 
+
+    // eliminar un usario por su id
     @DeleteMapping("/{id}/eliminar")
+    @Operation(summary = "Eliminar un Usuario por su ID", description = "Elimina un Usuario a travez de su ID")
+    @ApiResponses (value = {
+        @ApiResponse(responseCode = "204",description = "Usuario eliminado correctamente"),
+        @ApiResponse(responseCode = "404",description = "Usuario no encontrado"),
+        @ApiResponse(responseCode = "500",description = "Error interno del servidor")
+    })
     public ResponseEntity<?> eliminar(@PathVariable Integer id){
         try{
             usuarioService.eliminarUsuario(id);
@@ -52,7 +88,16 @@ public class UsuarioController {
         }
     }
 
+
+    //actualizar un usuario por su id
     @PutMapping("/{id}/actualizar")
+    @Operation(summary = "Actualizar Un Usuario",description = "Actualiza los datos de un usuario a travez de su ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200",description = "Usuario actualizado correctamente",content = @Content(mediaType = "appplication/json",array = @ArraySchema(schema = @Schema(implementation = Usuario.class)))),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+        @ApiResponse(responseCode = "400",description = "Solicitud incorrecta"),
+        @ApiResponse(responseCode = "500",description = "Error interno del servidor")
+    })
     public ResponseEntity<Usuario> actualizar(@PathVariable Integer id,@RequestBody Usuario usuario){
         
 
