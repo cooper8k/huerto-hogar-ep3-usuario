@@ -34,6 +34,9 @@ public class Usuario {
     private String correo;
 
     @Column(nullable = false)
+    private String Region;
+
+    @Column(nullable = false)
     private String contrasena;
 
     @Column(nullable = false)
