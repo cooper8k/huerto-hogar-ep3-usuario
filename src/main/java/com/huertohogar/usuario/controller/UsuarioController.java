@@ -102,7 +102,9 @@ public class UsuarioController {
         usuario2.setApellido(usuario.getApellido());
         usuario2.setCorreo(usuario.getCorreo());
         usuario2.setRegion(usuario.getRegion());
+        if(usuario.getContrasena()!=null && !usuario.getContrasena().trim().isEmpty()){
         usuario2.setContrasena(usuario.getContrasena());
+        }
         usuario2.setEstado(usuario.isEstado());
         // si el usuario envia el rol a actualizar va a validar si existe
         if (usuario.getRol() != null) {
