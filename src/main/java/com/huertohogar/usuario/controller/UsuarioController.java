@@ -1,6 +1,7 @@
 package com.huertohogar.usuario.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.huertohogar.usuario.model.Rol;
@@ -118,10 +120,49 @@ public class UsuarioController {
             }
             usuario2.setRol(rolGestionado);
         }
-
         usuarioService.actualizUsuario(usuario2);
         return ResponseEntity.ok(usuario2);
-
     }
 
+
+
+    @PostMapping("/login")
+    @Operation(summary = "Login de usuario",description = "Autencica un usuario con correo y contraseña")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200",description = "Login exitoso"),
+        @ApiResponse(responseCode = "401",description = "Credenciales invalidas"),
+        @ApiResponse(responseCode = "404",description = "Usuario no existe"),
+    })
+    public ResponseEntity<?> login(@RequestBody Map<String ,String>credeciales ){
+        String correo = credeciales.get("correo");
+        String contrasena = credeciales.get("contrasena");
+        
+        Optional<Usuario> usuarioOpt = usuarioService.findByCorreo(correo);
+        // valida si el usuario no existe
+        if (usuarioOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(Map.of("message","Usuario no encontrado"));
+        }
+        Usuario usuarioEncontrado = usuarioOpt.get();
+
+        // valida si el usuario esta inactivo
+        if (!usuarioEncontrado.isEstado()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(Map.of("message","Usuario inactivo"));
+        }
+
+        // valida que la contraseña no sea null
+        if (usuarioEncontrado.getContrasena() == null || contrasena == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(Map.of("message","Contraseña no configurada"));
+        }
+
+        // valida la contraseña
+        if (!usuarioEncontrado.getContrasena().equals(contrasena)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(Map.of("message","Contraseña incorrecta"));
+        }
+        
+        return ResponseEntity.ok(usuarioEncontrado);
+    }
 }

@@ -43,4 +43,7 @@ public class UsuarioService {
         return usuarioRepository.save(usuario); 
        }
 
+    public Optional<Usuario> findByCorreo(String correo){
+        return usuarioRepository.findByCorreo(correo);
+    }
 }
