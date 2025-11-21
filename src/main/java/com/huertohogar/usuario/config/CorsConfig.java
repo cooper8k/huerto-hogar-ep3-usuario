@@ -8,12 +8,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CorsConfig {
 
+    @Bean
     public WebMvcConfigurer corsConfigurer(){
-        return new WebMvcConfigurer() {
-            @Bean
+        return new WebMvcConfigurer() {            
             public void addCorsMappings(CorsRegistry registry){
                 registry.addMapping("/**")
-                .allowedOrigins("http://test-app-react-huerto-hogar-ep3.s3-website-us-east-1.amazonaws.com/")
+                .allowedOrigins("http://test-app-react-huerto-hogar-ep3.s3-website-us-east-1.amazonaws.com")
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*");
             }
