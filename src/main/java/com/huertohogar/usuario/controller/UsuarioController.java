@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.huertohogar.usuario.model.Rol;
 import com.huertohogar.usuario.model.Usuario;
+import com.huertohogar.usuario.security.JwtUtil;
 import com.huertohogar.usuario.service.RolService;
 import com.huertohogar.usuario.service.UsuarioService;
 
@@ -34,8 +34,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/v1/usuario")
 @Tag(name = "usuarios", description = "controlador para gestionar los Usuarios")
 public class UsuarioController {
-    Usuario usuario = new Usuario();
 
+    @Autowired
+    private JwtUtil jwtUtil;
     @Autowired
     private UsuarioService usuarioService;
     @Autowired
@@ -62,6 +63,8 @@ public class UsuarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public ResponseEntity<Usuario> guardarUsuario(@RequestBody Usuario usuario) {
+        // Asegurar que el ID sea null para crear un nuevo usuario
+        usuario.setId_usuario(null);
         Usuario nuevUsuario = usuarioService.saveUsuario(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevUsuario);
     }
@@ -125,11 +128,11 @@ public class UsuarioController {
     }
 
 
-
+    //Login ACTUALIZADO
     @PostMapping("/login")
-    @Operation(summary = "Login de usuario",description = "Autencica un usuario con correo y contraseña")
+    @Operation(summary = "Login de usuario",description = "Autencica un usuario con correo y contraseña y genera un token JWT")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200",description = "Login exitoso"),
+        @ApiResponse(responseCode = "200",description = "Login exitoso, retorna el token JWT"),
         @ApiResponse(responseCode = "401",description = "Credenciales invalidas"),
         @ApiResponse(responseCode = "404",description = "Usuario no existe"),
     })
@@ -163,6 +166,21 @@ public class UsuarioController {
             .body(Map.of("message","Contraseña incorrecta"));
         }
         
-        return ResponseEntity.ok(usuarioEncontrado);
+        // Generar el token JWT
+        System.out.println("\n*** LOGIN EXITOSO - Generando token para: " + usuarioEncontrado.getCorreo() + " ***");
+        String rolNombre = usuarioEncontrado.getRol() != null ? usuarioEncontrado.getRol().getNombre_rol() : "USER";
+        org.springframework.security.core.Authentication authentication = 
+            new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                usuarioEncontrado.getCorreo(),
+                null,
+                List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + rolNombre))
+            );
+        
+        String token = jwtUtil.generateToken(authentication);
+        System.out.println("*** Token listo para enviar al cliente ***\n");
+        
+        return ResponseEntity.ok(Map.of(
+            "token", token
+        ));
     }
 }
