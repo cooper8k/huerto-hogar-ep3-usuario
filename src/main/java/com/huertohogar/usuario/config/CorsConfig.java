@@ -14,7 +14,7 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry){
                 registry.addMapping("/**")
                 .allowedOrigins("http://test-app-react-huerto-hogar-ep3.s3-website-us-east-1.amazonaws.com/")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*");
             }
         };
