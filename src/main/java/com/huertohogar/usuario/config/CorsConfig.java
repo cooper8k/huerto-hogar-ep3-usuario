@@ -12,12 +12,14 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             public void addCorsMappings(CorsRegistry registry){
                 registry.addMapping("/**")
-                .allowedOrigins("http://test-app-react-huerto-hogar-ep3.s3-website-us-east-1.amazonaws.com")
+                .allowedOrigins("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*")
                 //AGREGADO
                 .allowCredentials(true);
             }
+
+            //http://test-app-react-huerto-hogar-ep3.s3-website-us-east-1.amazonaws.com
         };
     }
 }
