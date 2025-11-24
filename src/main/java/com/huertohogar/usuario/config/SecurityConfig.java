@@ -23,16 +23,14 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                //ENDPOINTS PUBLICOS
+                //TODOS LOS ENDPOINTS PUBLICOS - NO REQUIEREN TOKEN
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuario/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuario/guardar").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/usuario/**").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/usuario/**").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/v1/usuario/**").permitAll()
 
-                //ENDPOINTS PROTEGIDOS
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/usuario/**").hasRole("Administrador")
-                .requestMatchers(HttpMethod.PUT, "/api/v1/usuario/**").hasRole("Administrador")
-
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
             )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
