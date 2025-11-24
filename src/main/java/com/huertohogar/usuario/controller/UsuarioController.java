@@ -177,10 +177,11 @@ public class UsuarioController {
             );
         
         String token = jwtUtil.generateToken(authentication);
-        System.out.println("*** Token listo para enviar al cliente ***\n");
+        System.out.println("*** Token listo para enviar al cliente ***");
+        System.out.println("Token: " + token);
+        System.out.println("======================\n");
         
-        return ResponseEntity.ok(Map.of(
-            "token", token
-        ));
+        // Retornar solo el token en un Map simple
+        return ResponseEntity.ok().body(Map.of("token", token));
     }
 }
