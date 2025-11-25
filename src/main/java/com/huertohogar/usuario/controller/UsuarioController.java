@@ -34,13 +34,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/v1/usuario")
 @Tag(name = "usuarios", description = "controlador para gestionar los Usuarios")
 public class UsuarioController {
+    Usuario usuario = new Usuario();
 
-    @Autowired
-    private JwtUtil jwtUtil;
     @Autowired
     private UsuarioService usuarioService;
     @Autowired
     private RolService rolService;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // listar usuarios
     @GetMapping("/listar")
@@ -63,8 +64,6 @@ public class UsuarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public ResponseEntity<Usuario> guardarUsuario(@RequestBody Usuario usuario) {
-        // Asegurar que el ID sea null para crear un nuevo usuario
-        usuario.setId_usuario(null);
         Usuario nuevUsuario = usuarioService.saveUsuario(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevUsuario);
     }
@@ -81,7 +80,6 @@ public class UsuarioController {
         try {
             usuarioService.eliminarUsuario(id);
             return ResponseEntity.noContent().build();
-
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
@@ -128,7 +126,7 @@ public class UsuarioController {
     }
 
 
-    //Login ACTUALIZADO
+
     @PostMapping("/login")
     @Operation(summary = "Login de usuario",description = "Autencica un usuario con correo y contraseña y genera un token JWT")
     @ApiResponses(value = {
@@ -141,47 +139,32 @@ public class UsuarioController {
         String contrasena = credeciales.get("contrasena");
         
         Optional<Usuario> usuarioOpt = usuarioService.findByCorreo(correo);
-        // valida si el usuario no existe
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(Map.of("message","Usuario no encontrado"));
         }
         Usuario usuarioEncontrado = usuarioOpt.get();
-
-        // valida si el usuario esta inactivo
         if (!usuarioEncontrado.isEstado()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(Map.of("message","Usuario inactivo"));
         }
-
-        // valida que la contraseña no sea null
         if (usuarioEncontrado.getContrasena() == null || contrasena == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(Map.of("message","Contraseña no configurada"));
         }
-
-        // valida la contraseña
         if (!usuarioEncontrado.getContrasena().equals(contrasena)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(Map.of("message","Contraseña incorrecta"));
         }
-        
         // Generar el token JWT
-        System.out.println("\n*** LOGIN EXITOSO - Generando token para: " + usuarioEncontrado.getCorreo() + " ***");
         String rolNombre = usuarioEncontrado.getRol() != null ? usuarioEncontrado.getRol().getNombre_rol() : "USER";
         org.springframework.security.core.Authentication authentication = 
             new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
                 usuarioEncontrado.getCorreo(),
                 null,
-                List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + rolNombre))
+                java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + rolNombre))
             );
-        
         String token = jwtUtil.generateToken(authentication);
-        System.out.println("*** Token listo para enviar al cliente ***");
-        System.out.println("Token: " + token);
-        System.out.println("======================\n");
-        
-        // Retornar solo el token en un Map simple
-        return ResponseEntity.ok().body(Map.of("token", token));
+        return ResponseEntity.ok(Map.of("token", token));
     }
 }
