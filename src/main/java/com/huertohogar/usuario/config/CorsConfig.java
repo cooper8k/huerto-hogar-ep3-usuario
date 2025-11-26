@@ -14,8 +14,9 @@ public class CorsConfig {
                 registry.addMapping("/**")
                 .allowedOriginPatterns("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .exposedHeaders("Authorization")
                 .allowedHeaders("*")
-                .allowCredentials(false);
+                .allowCredentials(true);
             }
 
             //http://test-app-react-huerto-hogar-ep3.s3-website-us-east-1.amazonaws.com
